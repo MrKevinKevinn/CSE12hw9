@@ -169,12 +169,14 @@ unsigned long Tree<Whatever> :: Lookup (Whatever & element) const {
 template <class Whatever>
 void TNode<Whatever> :: Read (const offset & position, fstream * fio) {
   
-  if (Tree<Whatever> :: debug_on) {
-    cerr << COST_READ << (const char *)data << "]\n";
-  }
+
 
 	fio -> seekp (position);
   fio -> read ((char *) this, sizeof(TNode<Whatever>));
+
+  if (Tree<Whatever> :: debug_on) {
+    cerr << COST_READ << (const char *)data << "]\n";
+  }
 }
 
 template <class Whatever>
@@ -222,6 +224,7 @@ Tree<Whatever> :: Tree (const char * datafile) :
 	fio (new fstream (datafile, ios :: out | ios :: in)) {
   tree_count = 1;
   occupancy = 0;
+  root = ROOT_PLACE;
 
   // debug check
   if (debug_on) {
@@ -263,7 +266,7 @@ Tree<Whatever> :: ~Tree (void)
 
     // debug check
   if (debug_on) {
-    cerr << TREE << Tree<Whatever> :: tree_count << DEALLOCATE << "]\n";
+    cerr << TREE << Tree<Whatever> :: tree_count << DEALLOCATE;
   }
 
   fio -> write((const char *) & occupancy, sizeof(occupancy));

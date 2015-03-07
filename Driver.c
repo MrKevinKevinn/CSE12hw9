@@ -176,23 +176,12 @@ void TNode<Whatever> :: Read (const offset & position, fstream * fio) {
 
   if (Tree<Whatever> :: debug_on) {
     cerr << COST_READ << (const char *)data << "]\n";
-  }
+  } 
 }
 
 template <class Whatever>
 TNode<Whatever> :: TNode (const offset & position, fstream * fio) {
   Read (position, fio);
-
-/*if (left) {
-		TNode<Whatever> readLeftNode (left, fio);
-		readLeftNode.Write_AllTNodes (stream, fio);
-	}
-	stream << *this
-	if (right) {
-		TNode<Whatever> readRightNode (right, fio);
-		readRightNode.Write_AllTNodes (stream, fio);
-	}
-  return stream*/
 }
 
 // WRITE CONSTRUCTOR OVER HERE !!!!!!!
@@ -217,7 +206,9 @@ void TNode<Whatever> :: Write (fstream * fio) const {
   fio -> seekp(0, ios::end); // put pointer at end
   offset end = fio -> tellp();
   fio -> write((const char *) this, sizeof(TNode<Whatever>));
+
 }
+
 
 template <class Whatever>
 Tree<Whatever> :: Tree (const char * datafile) :
@@ -228,7 +219,7 @@ Tree<Whatever> :: Tree (const char * datafile) :
 
   // debug check
   if (debug_on) {
-    cerr << TREE << Tree<Whatever> :: tree_count << ALLOCATE << "]\n";
+    cerr << TREE << Tree<Whatever> :: tree_count << ALLOCATE;
   }
 
   fio -> seekg(0, ios::beg);
@@ -241,7 +232,7 @@ Tree<Whatever> :: Tree (const char * datafile) :
     fio -> seekp(0, ios :: beg);
     fio -> write((const char *) &root, sizeof(root));
     fio -> write ((const char *) &occupancy, sizeof(occupancy));
-
+    
     root = fio->tellp();
 
   } else {
@@ -269,7 +260,7 @@ Tree<Whatever> :: ~Tree (void)
     cerr << TREE << Tree<Whatever> :: tree_count << DEALLOCATE;
   }
 
-  fio -> write((const char *) & occupancy, sizeof(occupancy));
+  //fio -> write((const char *) & occupancy, sizeof(occupancy));
   root = 0;
   occupancy = 0;
   delete fio;

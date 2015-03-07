@@ -254,13 +254,13 @@ Tree<Whatever> :: ~Tree (void)
 ***************************************************************************/
 
 {
-
     // debug check
   if (debug_on) {
     cerr << TREE << Tree<Whatever> :: tree_count << DEALLOCATE;
   }
 
-  //fio -> write((const char *) & occupancy, sizeof(occupancy));
+  fio -> seekp(4, ios :: beg);
+  fio -> write((const char *) &occupancy, sizeof(occupancy));
   root = 0;
   occupancy = 0;
   delete fio;

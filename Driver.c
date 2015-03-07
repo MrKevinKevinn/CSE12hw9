@@ -12,7 +12,7 @@ static const char TREE[] = "[Tree ";
 template <class Whatever>
 int Tree<Whatever>::debug_on = 0;
 
-template <class Whatever>
+template <class Whatever> 
 long Tree<Whatever>::cost = 0;
 
 template <class Whatever>
@@ -115,11 +115,13 @@ unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
 	fstream * fio, long & occupancy, offset & PositionInParent,
 	long fromSHB) {
 	/* YOUR CODE GOES HERE */
+	return 0;
 }
 	
 template <class Whatever>
 unsigned long Tree<Whatever> :: Remove (Whatever & element) {
 	/* YOUR CODE GOES HERE */
+	return 1;
 }
 
 template <class Whatever>
@@ -158,12 +160,13 @@ template <class Whatever>
 unsigned long TNode<Whatever> :: Insert (Whatever & element, fstream * fio,
 	long & occupancy, offset & PositionInParent) {
 
-
+	return 0;
 }
 
 template <class Whatever>
 unsigned long Tree<Whatever> :: Lookup (Whatever & element) const {
 	/* YOUR CODE GOES HERE */
+        return 0;
 }
 
 template <class Whatever>
@@ -204,7 +207,7 @@ void TNode<Whatever> :: Write (fstream * fio) const {
 
   
   fio -> seekp(0, ios::end); // put pointer at end
-  offset end = fio -> tellp();
+  //offset end = fio -> tellp(); //seems to be useless code
   fio -> write((const char *) this, sizeof(TNode<Whatever>));
 
 }

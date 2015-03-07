@@ -12,7 +12,7 @@ static const char TREE[] = "[Tree ";
 template <class Whatever>
 int Tree<Whatever>::debug_on = 0;
 
-template <class Whatever>
+template <class Whatever> 
 long Tree<Whatever>::cost = 0;
 
 template <class Whatever>
@@ -81,25 +81,21 @@ struct  TNode {
 */
 template <class Whatever>
 unsigned long Tree<Whatever> :: Insert (Whatever & element) {
-  long retval;
 
   fio->seekp(0, ios::end);
   offset ending = fio->tellp(); // get ending pointer
 
   // insert root
   if (ending == ROOT_PLACE) { 
-    TNode<Whatever> temp(element, fio, occupancy); // write ctor
-    
-    
+    TNode<Whatever> temp (element, fio, occupancy); // write ctor  
     root = temp.this_position;
 
     return 1;
 
   // launch search for every other entry
   } else {
-    TNode<Whatever> readRootNode(root, fio);
-    retval = readRootNode.Insert(element, fio, occupancy, root);
-    return retval;
+    TNode<Whatever> readRootNode (root, fio);
+    return readRootNode.Insert(element, fio, occupancy, root);
   }
 
 }
@@ -115,11 +111,13 @@ unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
 	fstream * fio, long & occupancy, offset & PositionInParent,
 	long fromSHB) {
 	/* YOUR CODE GOES HERE */
+	return 0;
 }
 	
 template <class Whatever>
 unsigned long Tree<Whatever> :: Remove (Whatever & element) {
 	/* YOUR CODE GOES HERE */
+	return 1;
 }
 
 template <class Whatever>
@@ -158,12 +156,13 @@ template <class Whatever>
 unsigned long TNode<Whatever> :: Insert (Whatever & element, fstream * fio,
 	long & occupancy, offset & PositionInParent) {
 
-
+	return 0;
 }
 
 template <class Whatever>
 unsigned long Tree<Whatever> :: Lookup (Whatever & element) const {
 	/* YOUR CODE GOES HERE */
+        return 0;
 }
 
 template <class Whatever>
@@ -191,7 +190,7 @@ TNode<Whatever> :: TNode (Whatever & element, fstream * fio, long & occupancy):
 			right (0) {
   fio -> seekp(0, ios :: end);
   this_position = fio -> tellp();
-	occupancy++;
+  occupancy++;
   Write(fio);
 }
 
@@ -204,7 +203,7 @@ void TNode<Whatever> :: Write (fstream * fio) const {
 
   
   fio -> seekp(0, ios::end); // put pointer at end
-  offset end = fio -> tellp();
+  //offset end = fio -> tellp(); //seems to be useless code
   fio -> write((const char *) this, sizeof(TNode<Whatever>));
 
 }
@@ -254,13 +253,14 @@ Tree<Whatever> :: ~Tree (void)
 ***************************************************************************/
 
 {
+
     // debug check
   if (debug_on) {
     cerr << TREE << Tree<Whatever> :: tree_count << DEALLOCATE;
   }
 
   fio -> seekp(4, ios :: beg);
-  fio -> write((const char *) &occupancy, sizeof(occupancy));
+  fio -> write((const char *) & occupancy, sizeof(occupancy));
   root = 0;
   occupancy = 0;
   delete fio;

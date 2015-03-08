@@ -8,6 +8,11 @@ static const char COST_READ[] = "[Cost Increment (Disk Access): Reading ";
 static const char COST_WRITE[] = "[Cost Increment (Disk Access): Writing ";
 static const char DEALLOCATE[] = " - Deallocating]\n";
 static const char TREE[] = "[Tree ";
+static const char AND[] = " and ";
+static const char COMPARE[] = " - Comparing ";
+static const char REPLACE[] = " - Replacing ";
+static const char UPDATE[] = " - Updating ";
+
 
 template <class Whatever>
 int Tree<Whatever>::debug_on = 0;
@@ -81,12 +86,13 @@ struct  TNode {
 */
 template <class Whatever>
 unsigned long Tree<Whatever> :: Insert (Whatever & element) {
+  IncrementOperation();
 
   fio->seekp(0, ios::end);
   offset ending = fio->tellp(); // get ending pointer
 
   // insert root
-  if (ending == ROOT_PLACE) { 
+  if (ending == ROOT_PLACE) {
     TNode<Whatever> temp (element, fio, occupancy); // write ctor  
     root = temp.this_position;
 
@@ -110,21 +116,120 @@ template <class Whatever>
 unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
 	fstream * fio, long & occupancy, offset & PositionInParent,
 	long fromSHB) {
-	/* YOUR CODE GOES HERE */
-	return 0;
+  TNode<Whatever> thisNode(PositionInParent,fio);
+
+    // once the element is found, reassign pointers and delete, return TRUE
+    if (elementTNode.data == thisNode.data) { // found node to remove
+      
+      elementTNode.data = thisNode.data;       
+      
+      // two children removal
+      if (left != 0 && right != 0) {
+        ReplaceAndRemoveMax(thisNode,fio,left);
+      
+      // left child only removal
+      } else if (left != 0) {
+        PositionInParent = left;
+      
+      // right child only removal
+      } else if (this -> right != 0) {
+        PositionInParent = right;
+      
+      // leaf removal
+      }else {
+
+        PositionInParent = 0;
+      }
+
+      return TRUE;
+
+    // search when element greater than this
+    } else if (elementTNode.data > data) { // element larger, enter right
+      
+      if (right != 0) { // recursive case
+        Remove(elementTNode,fio,occupancy,right,0);
+      } else {
+        return FALSE;
+      }
+
+    // search when element less than this
+    } else { // element less than, enter left
+
+      if (left != 0) { // recursive case
+        Remove(elementTNode,fio,occupancy,left,0);
+      } else {
+        return FALSE;
+      }
+
+    } // end placement if-else
+    
+    // update height and balance of each node visited
+    if (!fromSHB) {
+      SetHeightAndBalance(fio,PositionInParent);
+    }
+    
+    return TRUE;
 }
 	
 template <class Whatever>
 unsigned long Tree<Whatever> :: Remove (Whatever & element) {
-	/* YOUR CODE GOES HERE */
-	return 1;
+	IncrementOperation();
+  
+  // failure is looking at empty table
+  if (root == 0) {
+    return 0;
+  }
+
+// NOTE: THIS CAN'T ACCOUNT FOR REMOVING ROOT. I SHAB REGARDLESS OF WHETHER
+// OR NOT ROOT WAS DELETED. SHAB UNECESSARY BECAUSE IT WILL HAPPEN IN TNODE
+// REMOVE?
+
+
+  long retval; // value to return
+  TNode<Whatever> elementTNode(element); // temp for TNode's remove
+  TNode<Whatever> rootNode(root,fio);
+  retval = rootNode.Remove(elementTNode,fio,occupancy,root);
+  
+  // set height and balance of root, reset element, and return 1 or 0
+  rootNode.SetHeightAndBalance(fio,root);
+  return retval;
 }
 
 template <class Whatever>
 void TNode<Whatever> :: SetHeightAndBalance (fstream * fio,
 	offset & PositionInParent) {
-	/* YOUR CODE GOES HERE */
-}
+    long lefth, righth; // height of children
+
+    lefth = -1;
+    righth = -1;
+
+    // assign left and right, if they aren't null
+    if (left != 0) {
+      TNode<Whatever> leftHeight(left,fio);
+      lefth = leftHeight.height;
+    }
+    if (right != 0) {
+      TNode<Whatever> rightHeight(right,fio);
+      righth = rightHeight.height;
+    }
+
+    // fix height of current
+    if (lefth > righth) {
+      height = lefth + 1;
+    } else {
+      height = righth + 1;
+    }
+  
+    balance = lefth - righth; // time for the balancing act
+
+    // fix if surpasses threshold
+    if (abs(balance) > THRESHOLD) {
+      long fakeOccupancy = 42;
+      TNode<Whatever> removable(data);
+      Remove(*this,fio,fakeOccupancy,PositionInParent,TRUE);
+      Insert(removable.data,fio,fakeOccupancy,this_position);
+    }
+  }
 
 template <class Whatever>
 long Tree <Whatever> :: GetCost () {
@@ -156,20 +261,58 @@ template <class Whatever>
 unsigned long TNode<Whatever> :: Insert (Whatever & element, fstream * fio,
 	long & occupancy, offset & PositionInParent) {
 
-	return 0;
+
+
+  if (Tree<Whatever> :: debug_on) {
+    cerr << COMPARE <<
+        (const char*)&data << AND << (const char*)&element << "]\n";
+  }
+
+  if (element == data) { // duplicate entry, switch to new data
+    
+    offset overwrite = fio -> tellg();
+    fio -> seekp(overwrite, ios :: beg);
+    TNode<Whatever> duplicate(element,fio,occupancy);
+    return 1;
+
+  } else if (element > data) { // element larger, enter right
+    fio -> seekp(0, ios :: end);
+
+    if (right != 0) { // recursive case
+      Insert(element, fio, occupancy,right);
+    } else { // base case
+      TNode<Whatever> inserted(element,fio,occupancy);
+      right = inserted.this_position;
+    }
+
+  } else { // element less than, enter left
+
+    if (left != 0) { // recursive case
+      Insert(element,fio,occupancy,left);
+    } else { // base case
+      TNode<Whatever> inserted(element, fio, occupancy);
+      left = inserted.this_position;
+    }
+
+  } // end placement if-else
+
+
+  SetHeightAndBalance(fio,PositionInParent);
+  fio -> seekp(this_position);
+  Write(fio);
 }
 
 template <class Whatever>
 unsigned long Tree<Whatever> :: Lookup (Whatever & element) const {
 	/* YOUR CODE GOES HERE */
+  IncrementOperation();
         return 0;
 }
 
 template <class Whatever>
 void TNode<Whatever> :: Read (const offset & position, fstream * fio) {
   
-
-
+  Tree<Whatever> :: IncrementCost();
 	fio -> seekp (position);
   fio -> read ((char *) this, sizeof(TNode<Whatever>));
 
@@ -188,7 +331,6 @@ template <class Whatever>
 TNode<Whatever> :: TNode (Whatever & element, fstream * fio, long & occupancy): 
 			data (element), height (0), balance (0), left (0), 
 			right (0) {
-  fio -> seekp(0, ios :: end);
   this_position = fio -> tellp();
   occupancy++;
   Write(fio);
@@ -201,9 +343,7 @@ void TNode<Whatever> :: Write (fstream * fio) const {
     cerr << COST_WRITE << (const char *)data << "]\n";
   }
 
-  
-  fio -> seekp(0, ios::end); // put pointer at end
-  //offset end = fio -> tellp(); //seems to be useless code
+  Tree<Whatever> :: IncrementCost();
   fio -> write((const char *) this, sizeof(TNode<Whatever>));
 
 }
@@ -338,4 +478,5 @@ Write_AllTNodes (ostream & stream, fstream * fio) const {
 
 	return stream;
 }
+
 

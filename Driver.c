@@ -331,7 +331,8 @@ unsigned long TNode<Whatever> :: Insert (Whatever & element, fstream * fio,
     }
 
   } else { // element less than, enter left
-
+    fio -> seekp(0, ios :: end);
+    
     if (left != 0) { // recursive case
       TNode<Whatever> leftNode(left,fio);
       leftNode.Insert(element,fio,occupancy,left);

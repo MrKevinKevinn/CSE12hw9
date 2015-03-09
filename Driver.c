@@ -8,11 +8,6 @@ static const char COST_READ[] = "[Cost Increment (Disk Access): Reading ";
 static const char COST_WRITE[] = "[Cost Increment (Disk Access): Writing ";
 static const char DEALLOCATE[] = " - Deallocating]\n";
 static const char TREE[] = "[Tree ";
-static const char AND[] = " and ";
-static const char COMPARE[] = " - Comparing ";
-static const char REPLACE[] = " - Replacing ";
-static const char UPDATE[] = " - Updating ";
-
 
 template <class Whatever>
 int Tree<Whatever>::debug_on = 0;
@@ -109,8 +104,22 @@ unsigned long Tree<Whatever> :: Insert (Whatever & element) {
 template <class Whatever>
 void TNode<Whatever> :: ReplaceAndRemoveMax (TNode<Whatever> & targetTNode, 
 	fstream * fio, offset & PositionInParent) {
-	/* YOUR CODE GOES HERE */
-}
+  TNode<Whatever> thisNode(PositionInParent,fio);
+  //if there is a right child, recursively call ReplaceRemoveMax on it
+  if(right)
+  {
+    TNode<Whatever> RightNode (right, fio);
+    RightNode.ReplaceAndRemoveMax(targetTNode, fio, right);
+    if(thisNode.data)
+      SetHeightAndBalance(fio, PositionInParent);
+  }
+  /* otherwise, set targetTNode's data to this data, PointerInParent to left
+    and delete this data. Print debug message if debug is on */
+  else    
+  {
+    targetTNode.data = thisNode.data;
+    PositionInParent = left;    
+  }
 
 template <class Whatever>
 unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
@@ -186,7 +195,7 @@ unsigned long Tree<Whatever> :: Remove (Whatever & element) {
     return 0;
   }
 
-  long retval; // value to return
+  unsigned long retval; // value to return
   TNode<Whatever> elementTNode(element); // temp for TNode's remove
   TNode<Whatever> rootNode(root,fio);
   IncrementOperation();
@@ -211,9 +220,7 @@ unsigned long Tree<Whatever> :: Remove (Whatever & element) {
     
     // leaf removal
     } else {
-      fio -> seekg(0, ios::end);
-      root = fio -> tellg();
-      occupancy--;
+      ResetRoot();
       return 1;
     }
   }
@@ -282,20 +289,28 @@ void Tree <Whatever> :: IncrementOperation () {
 
 template <class Whatever>
 void Tree <Whatever> :: ResetRoot () {
-        /* YOUR CODE GOES HERE */       
+    fio -> seekp(0, ios :: end);
+    offset end_position = fio -> tellp();
+    ((TNode<Whatever>)root).this_position = end_position;
+
+
+  //NEED TO FIGURE OUT PROPER SYNTAX!!!!!!!!! I Believe this is the 
+  //gist of this function though
+  // STAZIA REPLY: syntax-wise, I don't think root needs to be cast. We're
+  // in the Tree, not the nodes, so root node isn't a thing. This is what I 
+  // had in the case of removing a root with no children before I realized
+  // that that's what ResetRoot is for:
+  //
+  //      fio -> seekg(0, ios::end);
+  //    root = fio -> tellg();
+  //    occupancy--;
+
 }
 	
 
 template <class Whatever>
 unsigned long TNode<Whatever> :: Insert (Whatever & element, fstream * fio,
 	long & occupancy, offset & PositionInParent) {
-
-
-
-  if (Tree<Whatever> :: debug_on) {
-    cerr << COMPARE <<
-        (const char*)&data << AND << (const char*)&element << "]\n";
-  }
 
   if (element == data) { // duplicate entry, switch to new data
     data = element;

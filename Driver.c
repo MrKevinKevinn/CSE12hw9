@@ -224,6 +224,7 @@ unsigned long Tree<Whatever> :: Remove (Whatever & element) {
       ResetRoot();
       return 1;
     }
+    occupancy--;
   }
 
   retval = rootNode.Remove(elementTNode,fio,occupancy,root);
@@ -294,6 +295,7 @@ void Tree <Whatever> :: ResetRoot () {
     offset end_position = fio -> tellp();
     //((TNode<Whatever>)root).this_position = end_position;
     root = end_position;
+    occupancy--;
 
   //NEED TO FIGURE OUT PROPER SYNTAX!!!!!!!!! I Believe this is the 
   //gist of this function though
@@ -304,7 +306,6 @@ void Tree <Whatever> :: ResetRoot () {
   //
   //      fio -> seekg(0, ios::end);
   //    root = fio -> tellg();
-  //    occupancy--;
 
 }
 	
@@ -332,7 +333,6 @@ unsigned long TNode<Whatever> :: Insert (Whatever & element, fstream * fio,
 
   } else { // element less than, enter left
     fio -> seekp(0, ios :: end);
-    
     if (left != 0) { // recursive case
       TNode<Whatever> leftNode(left,fio);
       leftNode.Insert(element,fio,occupancy,left);
@@ -351,9 +351,40 @@ unsigned long TNode<Whatever> :: Insert (Whatever & element, fstream * fio,
 
 template <class Whatever>
 unsigned long Tree<Whatever> :: Lookup (Whatever & element) const {
-	/* YOUR CODE GOES HERE */
   IncrementOperation();
-        return 0;
+    if (occupancy == 0) {
+      return 0;
+    }
+
+    TNode<Whatever> working(root,fio); // working TNode
+    
+    while (true) {
+
+      // is dulpicate?
+      if (element == working.data) {
+        element = working.data;
+        return 1;
+        
+      // move to right pointer if element is greater than current node
+      } else if (element > working.data) {
+        if (working.right != 0) {
+           working.Read(working.right,fio);
+        } else {
+          return 0;
+        }
+
+      // move to left pointer if element is less than current node
+      } else if (!(element > working.data)) {
+        if (working.left != 0) {
+          working.Read(working.left,fio);
+        } else {
+          return 0;
+        }
+      } 
+    } // end while
+
+    return 0;
+
 }
 
 template <class Whatever>

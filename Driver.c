@@ -120,6 +120,7 @@ void TNode<Whatever> :: ReplaceAndRemoveMax (TNode<Whatever> & targetTNode,
     targetTNode.data = thisNode.data;
     PositionInParent = left;    
   }
+}
 
 template <class Whatever>
 unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
@@ -291,8 +292,8 @@ template <class Whatever>
 void Tree <Whatever> :: ResetRoot () {
     fio -> seekp(0, ios :: end);
     offset end_position = fio -> tellp();
-    ((TNode<Whatever>)root).this_position = end_position;
-
+    //((TNode<Whatever>)root).this_position = end_position;
+    root = end_position;
 
   //NEED TO FIGURE OUT PROPER SYNTAX!!!!!!!!! I Believe this is the 
   //gist of this function though

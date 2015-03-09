@@ -224,7 +224,6 @@ unsigned long Tree<Whatever> :: Remove (Whatever & element) {
       ResetRoot();
       return 1;
     }
-    occupancy--;
   }
 
   retval = rootNode.Remove(elementTNode,fio,occupancy,root);
@@ -306,6 +305,11 @@ void Tree <Whatever> :: ResetRoot () {
   //
   //      fio -> seekg(0, ios::end);
   //    root = fio -> tellg();
+  //KEVIN REPLY: yep, you're right. My bad. Also I'm still trying to understand
+  //             the difference between tellp and tellg too. I know it says
+  //             one gets and one puts but I'm still unsure what it's referring
+  //             to exactly. Once that is cleared up I'll be better equipped to
+  //             use them in the program. Sorry about that
 
 }
 	
@@ -313,32 +317,34 @@ void Tree <Whatever> :: ResetRoot () {
 template <class Whatever>
 unsigned long TNode<Whatever> :: Insert (Whatever & element, fstream * fio,
 	long & occupancy, offset & PositionInParent) {
-
+  unsigned long retVal;
   if (element == data) { // duplicate entry, switch to new data
     data = element;
     fio -> seekp(this_position);
     Write(fio);
-    return 1;
+    return TRUE;
 
   } else if (element > data) { // element larger, enter right
     fio -> seekp(0, ios :: end);
 
-    if (right != 0) { // recursive case
+    if (right) { // recursive case
       TNode<Whatever> rightNode(right,fio);
-      rightNode.Insert(element, fio, occupancy,right);
+      retVal = rightNode.Insert(element, fio, occupancy,right);
     } else { // base case
       TNode<Whatever> inserted(element,fio,occupancy);
       right = inserted.this_position;
+      retVal = TRUE;
     }
 
   } else { // element less than, enter left
     fio -> seekp(0, ios :: end);
-    if (left != 0) { // recursive case
+    if (left) { // recursive case
       TNode<Whatever> leftNode(left,fio);
-      leftNode.Insert(element,fio,occupancy,left);
+      retVal = leftNode.Insert(element,fio,occupancy,left);
     } else { // base case
       TNode<Whatever> inserted(element, fio, occupancy);
       left = inserted.this_position;
+      retVal = TRUE;
     }
 
   } // end placement if-else
@@ -347,43 +353,43 @@ unsigned long TNode<Whatever> :: Insert (Whatever & element, fstream * fio,
   SetHeightAndBalance(fio,PositionInParent);
   fio -> seekp(this_position);
   Write(fio);
+  return retVal;
 }
 
 template <class Whatever>
 unsigned long Tree<Whatever> :: Lookup (Whatever & element) const {
   IncrementOperation();
-    if (occupancy == 0) {
-      return 0;
+    if (!occupancy) {
+      return FALSE;
     }
 
     TNode<Whatever> working(root,fio); // working TNode
     
-    while (true) {
+    while (TRUE) {
 
       // is dulpicate?
       if (element == working.data) {
         element = working.data;
-        return 1;
+        return TRUE;
         
       // move to right pointer if element is greater than current node
       } else if (element > working.data) {
-        if (working.right != 0) {
+        if (working.right) {
            working.Read(working.right,fio);
         } else {
-          return 0;
+          return FALSE;
         }
-
       // move to left pointer if element is less than current node
       } else if (!(element > working.data)) {
-        if (working.left != 0) {
+        if (working.left) {
           working.Read(working.left,fio);
         } else {
-          return 0;
+          return FALSE;
         }
-      } 
+      }
     } // end while
 
-    return 0;
+    return FALSE;
 
 }
 
@@ -556,5 +562,6 @@ Write_AllTNodes (ostream & stream, fstream * fio) const {
 
 	return stream;
 }
+
 
 

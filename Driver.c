@@ -92,7 +92,7 @@ unsigned long Tree<Whatever> :: Insert (Whatever & element) {
   offset ending = fio->tellp(); // get ending pointer
 
   // insert root
-  if (ending == ROOT_PLACE) {
+  if (ending == root) {
     TNode<Whatever> temp (element, fio, occupancy); // write ctor  
     root = temp.this_position;
 
@@ -119,35 +119,40 @@ unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
   TNode<Whatever> thisNode(PositionInParent,fio);
 
     // once the element is found, reassign pointers and delete, return TRUE
-    if (elementTNode.data == thisNode.data) { // found node to remove
-      
-      elementTNode.data = thisNode.data;       
+    if (elementTNode.data == data) { // found node to remove
+
+      elementTNode.data = data;       
       
       // two children removal
       if (left != 0 && right != 0) {
-        ReplaceAndRemoveMax(thisNode,fio,left);
+        TNode<Whatever> leftNode(left,fio);
+        leftNode.ReplaceAndRemoveMax(thisNode,fio,left);
       
       // left child only removal
       } else if (left != 0) {
         PositionInParent = left;
       
       // right child only removal
-      } else if (this -> right != 0) {
+      } else if (right != 0) {
         PositionInParent = right;
       
       // leaf removal
-      }else {
+      } else {
 
         PositionInParent = 0;
       }
 
+      occupancy--;
+      fio -> seekp(this_position);
+      Write(fio);
       return TRUE;
 
     // search when element greater than this
     } else if (elementTNode.data > data) { // element larger, enter right
       
       if (right != 0) { // recursive case
-        Remove(elementTNode,fio,occupancy,right,0);
+        TNode<Whatever> rightNode(right,fio);
+        rightNode.Remove(elementTNode,fio,occupancy,right,0);
       } else {
         return FALSE;
       }
@@ -156,7 +161,8 @@ unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
     } else { // element less than, enter left
 
       if (left != 0) { // recursive case
-        Remove(elementTNode,fio,occupancy,left,0);
+        TNode<Whatever> leftNode(left,fio);
+        leftNode.Remove(elementTNode,fio,occupancy,left,0);
       } else {
         return FALSE;
       }
@@ -167,31 +173,54 @@ unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
     if (!fromSHB) {
       SetHeightAndBalance(fio,PositionInParent);
     }
-    
+
+    fio -> seekp(this_position);
+    Write(fio);
     return TRUE;
 }
 	
 template <class Whatever>
 unsigned long Tree<Whatever> :: Remove (Whatever & element) {
-	IncrementOperation();
-  
-  // failure is looking at empty table
-  if (root == 0) {
+
+  if (occupancy == 0) {
     return 0;
   }
-
-// NOTE: THIS CAN'T ACCOUNT FOR REMOVING ROOT. I SHAB REGARDLESS OF WHETHER
-// OR NOT ROOT WAS DELETED. SHAB UNECESSARY BECAUSE IT WILL HAPPEN IN TNODE
-// REMOVE?
-
 
   long retval; // value to return
   TNode<Whatever> elementTNode(element); // temp for TNode's remove
   TNode<Whatever> rootNode(root,fio);
+  IncrementOperation();
+
+  // once the element is found, reassign pointers and delete, return TRUE
+  if (rootNode.data == element) { // found node to remove
+
+    element = rootNode.data;   
+    
+    // two children removal
+    if (rootNode.left != 0 && rootNode.right != 0) {
+      TNode<Whatever> leftNode(rootNode.left,fio);
+      leftNode.ReplaceAndRemoveMax(rootNode,fio,rootNode.left);
+    
+    // left child only removal
+    } else if (rootNode.left != 0) {
+      root = rootNode.left;
+    
+    // right child only removal
+    } else if (rootNode.right != 0) {
+      root = rootNode.right;
+    
+    // leaf removal
+    } else {
+      fio -> seekg(0, ios::end);
+      root = fio -> tellg();
+      occupancy--;
+      return 1;
+    }
+  }
+
   retval = rootNode.Remove(elementTNode,fio,occupancy,root);
-  
-  // set height and balance of root, reset element, and return 1 or 0
-  rootNode.SetHeightAndBalance(fio,root);
+  element = elementTNode.data;
+
   return retval;
 }
 
@@ -269,17 +298,17 @@ unsigned long TNode<Whatever> :: Insert (Whatever & element, fstream * fio,
   }
 
   if (element == data) { // duplicate entry, switch to new data
-    
-    offset overwrite = fio -> tellg();
-    fio -> seekp(overwrite, ios :: beg);
-    TNode<Whatever> duplicate(element,fio,occupancy);
+    data = element;
+    fio -> seekp(this_position);
+    Write(fio);
     return 1;
 
   } else if (element > data) { // element larger, enter right
     fio -> seekp(0, ios :: end);
 
     if (right != 0) { // recursive case
-      Insert(element, fio, occupancy,right);
+      TNode<Whatever> rightNode(right,fio);
+      rightNode.Insert(element, fio, occupancy,right);
     } else { // base case
       TNode<Whatever> inserted(element,fio,occupancy);
       right = inserted.this_position;
@@ -288,7 +317,8 @@ unsigned long TNode<Whatever> :: Insert (Whatever & element, fstream * fio,
   } else { // element less than, enter left
 
     if (left != 0) { // recursive case
-      Insert(element,fio,occupancy,left);
+      TNode<Whatever> leftNode(left,fio);
+      leftNode.Insert(element,fio,occupancy,left);
     } else { // base case
       TNode<Whatever> inserted(element, fio, occupancy);
       left = inserted.this_position;

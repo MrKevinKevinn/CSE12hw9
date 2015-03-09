@@ -109,7 +109,22 @@ unsigned long Tree<Whatever> :: Insert (Whatever & element) {
 template <class Whatever>
 void TNode<Whatever> :: ReplaceAndRemoveMax (TNode<Whatever> & targetTNode, 
 	fstream * fio, offset & PositionInParent) {
-	/* YOUR CODE GOES HERE */
+  TNode<Whatever> thisNode(PositionInParent,fio);
+  //if there is a right child, recursively call ReplaceRemoveMax on it
+  if(right)
+  {
+    TNode<Whatever> RightNode (right, fio);
+    RightNode.ReplaceAndRemoveMax(targetTNode, fio, right);
+    if(thisNode.data)
+      SetHeightAndBalance(fio, PositionInParent);
+  }
+  /* otherwise, set targetTNode's data to this data, PointerInParent to left
+    and delete this data. Print debug message if debug is on */
+  else    
+  {
+    targetTNode.data = thisNode.data;
+    PositionInParent = left;    
+  }
 }
 
 template <class Whatever>
@@ -118,57 +133,55 @@ unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
 	long fromSHB) {
   TNode<Whatever> thisNode(PositionInParent,fio);
 
-    // once the element is found, reassign pointers and delete, return TRUE
-    if (elementTNode.data == thisNode.data) { // found node to remove
+  // once the element is found, reassign pointers and delete, return TRUE
+  if (elementTNode.data == thisNode.data) { // found node to remove
       
-      elementTNode.data = thisNode.data;       
+    elementTNode.data = thisNode.data;       
       
-      // two children removal
-      if (left != 0 && right != 0) {
-        ReplaceAndRemoveMax(thisNode,fio,left);
+    // two children removal
+    if (left && right) {
+      ReplaceAndRemoveMax(thisNode,fio,left);
       
-      // left child only removal
-      } else if (left != 0) {
-        PositionInParent = left;
+    // left child only removal
+    } else if (left) {
+      PositionInParent = left;
       
-      // right child only removal
-      } else if (this -> right != 0) {
-        PositionInParent = right;
+    // right child only removal
+    } else if (right) {
+      PositionInParent = right;
       
-      // leaf removal
-      }else {
-
-        PositionInParent = 0;
-      }
-
-      return TRUE;
-
-    // search when element greater than this
-    } else if (elementTNode.data > data) { // element larger, enter right
-      
-      if (right != 0) { // recursive case
-        Remove(elementTNode,fio,occupancy,right,0);
-      } else {
-        return FALSE;
-      }
-
-    // search when element less than this
-    } else { // element less than, enter left
-
-      if (left != 0) { // recursive case
-        Remove(elementTNode,fio,occupancy,left,0);
-      } else {
-        return FALSE;
-      }
-
-    } // end placement if-else
-    
-    // update height and balance of each node visited
-    if (!fromSHB) {
-      SetHeightAndBalance(fio,PositionInParent);
+    // leaf removal
+    }else {
+      PositionInParent = 0;
     }
-    
+
     return TRUE;
+
+  // search when element greater than this
+  } else if (elementTNode.data > data) { // element larger, enter right
+      
+    if (right) { // recursive case
+      Remove(elementTNode,fio,occupancy,right,0);
+    } else {
+      return FALSE;
+    }
+
+  // search when element less than this
+  } else { // element less than, enter left
+
+    if (left) { // recursive case
+      Remove(elementTNode,fio,occupancy,left,0);
+    } else {
+      return FALSE;
+    }
+  } // end placement if-else
+    
+  // update height and balance of each node visited
+  if (!fromSHB) {
+    SetHeightAndBalance(fio,PositionInParent);
+  }
+  
+  return TRUE;
 }
 	
 template <class Whatever>
@@ -185,7 +198,7 @@ unsigned long Tree<Whatever> :: Remove (Whatever & element) {
 // REMOVE?
 
 
-  long retval; // value to return
+  unsigned long retval; // value to return
   TNode<Whatever> elementTNode(element); // temp for TNode's remove
   TNode<Whatever> rootNode(root,fio);
   retval = rootNode.Remove(elementTNode,fio,occupancy,root);
@@ -253,6 +266,9 @@ void Tree <Whatever> :: IncrementOperation () {
 
 template <class Whatever>
 void Tree <Whatever> :: ResetRoot () {
+  fio -> seekp(0, ios :: end);
+  offset end_position = fio -> tellg();
+  ((TNode<Whatever>)root).this_position = end_position; //NEED TO FIGURE OUT PROPER SYNTAX!!!!!!!!! I Believe this is the jist of this function though
         /* YOUR CODE GOES HERE */       
 }
 	
@@ -260,7 +276,8 @@ void Tree <Whatever> :: ResetRoot () {
 template <class Whatever>
 unsigned long TNode<Whatever> :: Insert (Whatever & element, fstream * fio,
 	long & occupancy, offset & PositionInParent) {
-
+  unsigned long retVal = 0; /* passes up return value reverse recursively
+                             from final point of insertion, back up the tree */
 
 
   if (Tree<Whatever> :: debug_on) {
@@ -279,19 +296,21 @@ unsigned long TNode<Whatever> :: Insert (Whatever & element, fstream * fio,
     fio -> seekp(0, ios :: end);
 
     if (right != 0) { // recursive case
-      Insert(element, fio, occupancy,right);
+      retVal = Insert(element, fio, occupancy,right);
     } else { // base case
       TNode<Whatever> inserted(element,fio,occupancy);
       right = inserted.this_position;
+      retVal = 1;
     }
 
   } else { // element less than, enter left
 
     if (left != 0) { // recursive case
-      Insert(element,fio,occupancy,left);
+      retVal = Insert(element,fio,occupancy,left);
     } else { // base case
       TNode<Whatever> inserted(element, fio, occupancy);
       left = inserted.this_position;
+      retVal = 1;
     }
 
   } // end placement if-else
@@ -300,6 +319,7 @@ unsigned long TNode<Whatever> :: Insert (Whatever & element, fstream * fio,
   SetHeightAndBalance(fio,PositionInParent);
   fio -> seekp(this_position);
   Write(fio);
+  return retVal;
 }
 
 template <class Whatever>
@@ -478,5 +498,3 @@ Write_AllTNodes (ostream & stream, fstream * fio) const {
 
 	return stream;
 }
-
-

@@ -1,3 +1,16 @@
+/*------------------------------------------------------------------------
+						Stazia Tronboll
+						cs12xpr
+						Kevin _____
+						________
+						CSE 12, Winter 2015
+						9 March 2015
+			Assignment 9
+File: Driver.c
+
+FILE DECSRIPTION
+-------------------------------------------------------------------------*/
+
 #include <stdlib.h>
 #include <string.h>
 #include "Tree.h"
@@ -32,6 +45,15 @@ long Tree<Whatever>::operation = 0;
 template <class Whatever>
 ostream & operator << (ostream &, const TNode<Whatever> &);
 
+/*----------------------------------------------------------------
+Name: struct TNode
+Purpose:
+
+Functions that we wrote/edited:
+	Tree Insert - 
+
+THE TREE AND TNODE FUNCTIONS ARE INTERMINGLING! HOW DO WE FORMAT THE HEADER?
+--------------------------------------------------------------*/
 template <class Whatever>
 struct  TNode {
 // friends:
@@ -101,6 +123,14 @@ unsigned long Tree<Whatever> :: Insert (Whatever & element) {
 
 }
 
+/*
+Name: ReplaceAndRemoveMax
+Purpose: Handle removal of a node with two children
+Description:
+	Travel right as far as you can, and put the data there into the
+	targetNode, which has the data that's being removed. Fully remove the
+	rightmost node.
+Parameters: 
 template <class Whatever>
 void TNode<Whatever> :: ReplaceAndRemoveMax (TNode<Whatever> & targetTNode, 
 	fstream * fio, offset & PositionInParent) {

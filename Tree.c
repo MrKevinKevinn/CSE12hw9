@@ -364,10 +364,10 @@ void TNode<Whatever> :: SetHeightAndBalance (fstream * fio,
   // fix if surpasses threshold
   if (abs(balance) > THRESHOLD) {
     long fakeOccupancy = 42;
-    TNode<Whatever> thisNode(this_position,fio);
     TNode<Whatever> removable(data);
-    Remove(thisNode,fio,fakeOccupancy,PositionInParent,TRUE);
-    Insert(removable.data,fio,fakeOccupancy,this_position);
+    Remove(*this,fio,fakeOccupancy,PositionInParent,TRUE);
+    TNode<Whatever> temp(PositionInParent,fio);
+    temp.Insert(removable.data,fio,fakeOccupancy,PositionInParent);
   }
 }
 

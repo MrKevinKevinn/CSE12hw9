@@ -140,20 +140,20 @@ Result: a node is removed, and tree structure is maintained
 template <class Whatever>
 void TNode<Whatever> :: ReplaceAndRemoveMax (TNode<Whatever> & targetTNode, 
 	fstream * fio, offset & PositionInParent) {
-  TNode<Whatever> thisNode(PositionInParent,fio);
+  // TNode<Whatever> thisNode(PositionInParent,fio);
   //if there is a right child, recursively call ReplaceRemoveMax on it
   if(right)
   {
     TNode<Whatever> RightNode (right, fio);
     RightNode.ReplaceAndRemoveMax(targetTNode, fio, right);
-    if(thisNode.data)
+    if(data)
       SetHeightAndBalance(fio, PositionInParent);
   }
   /* otherwise, set targetTNode's data to this data, PointerInParent to left
     and delete this data. Print debug message if debug is on */
   else    
   {
-    targetTNode.data = thisNode.data;
+    targetTNode.data = data;
     PositionInParent = left;
   }
 }
@@ -282,7 +282,14 @@ unsigned long Tree<Whatever> :: Remove (Whatever & element) {
     if (rootNode.left != 0 && rootNode.right != 0) {
       TNode<Whatever> leftNode(rootNode.left,fio);
       leftNode.ReplaceAndRemoveMax(rootNode,fio,rootNode.left);
-    
+      
+      // SHAB of updated root node
+      rootNode.SetHeightAndBalance(fio,root);
+
+      // write the updated node
+      fio -> seekp(root);
+      rootNode.Write(fio);
+
     // left child only removal
     } else if (rootNode.left != 0) {
       root = rootNode.left;
@@ -357,8 +364,9 @@ void TNode<Whatever> :: SetHeightAndBalance (fstream * fio,
   // fix if surpasses threshold
   if (abs(balance) > THRESHOLD) {
     long fakeOccupancy = 42;
+    TNode<Whatever> thisNode(this_position,fio);
     TNode<Whatever> removable(data);
-    Remove(*this,fio,fakeOccupancy,PositionInParent,TRUE);
+    Remove(thisNode,fio,fakeOccupancy,PositionInParent,TRUE);
     Insert(removable.data,fio,fakeOccupancy,this_position);
   }
 }

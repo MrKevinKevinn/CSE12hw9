@@ -131,6 +131,7 @@ Description:
 	targetNode, which has the data that's being removed. Fully remove the
 	rightmost node.
 Parameters: 
+*/
 template <class Whatever>
 void TNode<Whatever> :: ReplaceAndRemoveMax (TNode<Whatever> & targetTNode, 
 	fstream * fio, offset & PositionInParent) {

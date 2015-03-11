@@ -117,8 +117,10 @@ unsigned long Tree<Whatever> :: Insert (Whatever & element) {
 
   // launch search for every other entry
   } else {
+    long retval;
     TNode<Whatever> readRootNode (root, fio);
-    return readRootNode.Insert(element, fio, occupancy, root);
+    retval = readRootNode.Insert(element, fio, occupancy, root);
+    return retval;
   }
 
 }

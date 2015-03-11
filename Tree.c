@@ -1,12 +1,12 @@
 /*------------------------------------------------------------------------
-						                                                                                        Stazia Tronboll
+						        Stazia Tronboll
                                                         cs12xpr
                                                         Kevin Koutney
                                                         cs12xdx
                                                         CSE 12, Winter 2015
                                                         9 March 2015
-			                                Assignment 9
-File: Driver.c
+			Assignment 9
+File: Tree.c
 FILE DECSRIPTION
 -------------------------------------------------------------------------*/
 
@@ -142,7 +142,7 @@ void TNode<Whatever> :: ReplaceAndRemoveMax (TNode<Whatever> & targetTNode,
   {
     TNode<Whatever> RightNode (right, fio);
     RightNode.ReplaceAndRemoveMax(targetTNode, fio, right);
-    if(data)
+    //if(data)
       SetHeightAndBalance(fio, PositionInParent);
   }
   /* otherwise, set targetTNode's data to this data, PointerInParent to left
@@ -179,7 +179,6 @@ unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
 	fstream * fio, long & occupancy, offset & PositionInParent,
 	long fromSHB) {
   unsigned long retVal;
-  TNode<Whatever> thisNode(PositionInParent,fio);
 
     // once the element is found, reassign pointers and delete, return TRUE
     if (elementTNode.data == data) { // found node to remove
@@ -190,9 +189,13 @@ unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
       if (left && right) {
         TNode<Whatever> leftNode(left,fio);
         leftNode.ReplaceAndRemoveMax(*this,fio,left);
+        
+        // SHAB of updated root node
+        SetHeightAndBalance(fio,PositionInParent);
+
+        // write the updated node
         fio -> seekp(this_position);
         Write(fio);
-        return TRUE;
       
       // left child only removal
       } else if (left) {
@@ -208,8 +211,6 @@ unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
       }
 
       occupancy--;
-      fio -> seekp(this_position);
-      Write(fio);
       return TRUE;
 
     // search when element greater than this
@@ -289,7 +290,7 @@ unsigned long Tree<Whatever> :: Remove (Whatever & element) {
       // write the updated node
       fio -> seekp(root);
       rootNode.Write(fio);
-      return TRUE;
+    
     // left child only removal
     } else if (rootNode.left) {
       root = rootNode.left;
@@ -798,4 +799,3 @@ Write_AllTNodes (ostream & stream, fstream * fio) const {
 
 	return stream;
 }
-

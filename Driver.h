@@ -1,9 +1,11 @@
 /*----------------------------------------------------------------------------
                                                         Stazia Tronboll
                                                         cs12xpr
+                                                        _____________
+                                                        ______
                                                         CSE 12, Winter 2015
-                                                        Feb 27 2015
-                                Assignment 8
+                                                        10 March 2015
+                                Assignment 9
 File: Driver.h
 
 Defines UCSDStudent, constructor and overridden operators
@@ -26,18 +28,10 @@ using namespace std;
 
 class UCSDStudent {
         friend ostream & operator << (ostream &, const UCSDStudent &);
-        char name[20];
+        char name[8]; // array size changed for octal dump alignment
         long studentnum;
 
-
-
 public:
-
-  UCSDStudent(char * nm, long val) : studentnum(val) {
-    memset(name, '\0', sizeof(name));
-    strcpy(name, nm);
-  }
-
   /*
   * Name: UCSDStudent
   * Purpose: assign name and number of a student
@@ -48,6 +42,21 @@ public:
   * Return: N/A
   * Result: student created
   */
+  UCSDStudent(char * nm, long val) : studentnum(val) {
+    memset(name, '\0', sizeof(name));
+    strcpy(name, nm);
+  }
+
+  /*
+   * Name: UCSDStudent
+   * Purpose: default constructor. 
+   * Description: 
+   *      Makes a student with name for comparison purposes in Tree and
+   *      TNode's lookup
+   * Parameters: none
+   * Return: N/A
+   * Result: student created
+   */
   UCSDStudent(void) : studentnum(0) {
     memset(name, '\0', sizeof(name));
   }
@@ -68,6 +77,7 @@ public:
     studentnum = student.studentnum;
   }
 
+
   /*
   * Name: const char *
   * Purpose: make an easy name to get to the student's name
@@ -79,6 +89,7 @@ public:
   operator const char * () const {
     return name;
   }
+
 
   /*
   * Name: ==

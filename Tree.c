@@ -1,13 +1,12 @@
 /*------------------------------------------------------------------------
-						                                            Stazia Tronboll
+						                                                                                        Stazia Tronboll
                                                         cs12xpr
-                                                        Kevin _____
-                                                        ________
+                                                        Kevin Koutney
+                                                        cs12xdx
                                                         CSE 12, Winter 2015
                                                         9 March 2015
-			                        Assignment 9
+			                                Assignment 9
 File: Driver.c
-
 FILE DECSRIPTION
 -------------------------------------------------------------------------*/
 
@@ -50,8 +49,6 @@ Name: struct TNode
 Purpose:
 Functions that we wrote/edited:
 	Tree Insert - 
-
-
 THE TREE AND TNODE FUNCTIONS ARE INTERMINGLING! HOW DO WE FORMAT THE HEADER?
 --------------------------------------------------------------------------*/
 template <class Whatever>
@@ -112,15 +109,12 @@ unsigned long Tree<Whatever> :: Insert (Whatever & element) {
   if (ending == root) {
     TNode<Whatever> temp (element, fio, occupancy); // write ctor  
     root = temp.this_position;
-
-    return 1;
+    return TRUE;
 
   // launch search for every other entry
   } else {
-    long retval;
     TNode<Whatever> readRootNode (root, fio);
-    retval = readRootNode.Insert(element, fio, occupancy, root);
-    return retval;
+    return readRootNode.Insert(element, fio, occupancy, root);
   }
 
 }
@@ -184,6 +178,7 @@ template <class Whatever>
 unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
 	fstream * fio, long & occupancy, offset & PositionInParent,
 	long fromSHB) {
+  unsigned long retVal;
   TNode<Whatever> thisNode(PositionInParent,fio);
 
     // once the element is found, reassign pointers and delete, return TRUE
@@ -192,21 +187,24 @@ unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
       elementTNode.data = data; // reassign element to have the student's #
       
       // two children removal
-      if (left != 0 && right != 0) {
+      if (left && right) {
         TNode<Whatever> leftNode(left,fio);
-        leftNode.ReplaceAndRemoveMax(thisNode,fio,left);
+        leftNode.ReplaceAndRemoveMax(*this,fio,left);
+        fio -> seekp(this_position);
+        Write(fio);
+        return TRUE;
       
       // left child only removal
-      } else if (left != 0) {
+      } else if (left) {
         PositionInParent = left;
       
       // right child only removal
-      } else if (right != 0) {
+      } else if (right) {
         PositionInParent = right;
       
       // leaf removal
       } else {
-        PositionInParent = 0;
+        PositionInParent = NULL;
       }
 
       occupancy--;
@@ -217,9 +215,9 @@ unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
     // search when element greater than this
     } else if (elementTNode.data > data) {
       
-      if (right != 0) { // recursive case
+      if (right) { // recursive case
         TNode<Whatever> rightNode(right,fio);
-        rightNode.Remove(elementTNode,fio,occupancy,right,0);
+        retVal = rightNode.Remove(elementTNode,fio,occupancy,right,0);
       } else {
         return FALSE;
       }
@@ -227,9 +225,9 @@ unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
     // search when element less than this
     } else {
 
-      if (left != 0) { // recursive case
+      if (left) { // recursive case
         TNode<Whatever> leftNode(left,fio);
-        leftNode.Remove(elementTNode,fio,occupancy,left,0);
+        retVal = leftNode.Remove(elementTNode,fio,occupancy,left,0);
       } else {
         return FALSE;
       }
@@ -243,7 +241,7 @@ unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
 
     fio -> seekp(this_position);
     Write(fio);
-    return TRUE;
+    return retVal;
 }
 
 /*
@@ -266,7 +264,7 @@ unsigned long Tree<Whatever> :: Remove (Whatever & element) {
   // check for empty tree
   fio->seekg(0, ios::end);
   if (root == fio -> tellg()) {
-    return 0;
+    return FALSE;
   }
 
   unsigned long retval; // value to return
@@ -281,7 +279,7 @@ unsigned long Tree<Whatever> :: Remove (Whatever & element) {
     element = rootNode.data; // reassign element to have the student's number
     
     // two children removal
-    if (rootNode.left != 0 && rootNode.right != 0) {
+    if (rootNode.left && rootNode.right) {
       TNode<Whatever> leftNode(rootNode.left,fio);
       leftNode.ReplaceAndRemoveMax(rootNode,fio,rootNode.left);
       
@@ -291,22 +289,22 @@ unsigned long Tree<Whatever> :: Remove (Whatever & element) {
       // write the updated node
       fio -> seekp(root);
       rootNode.Write(fio);
-
+      return TRUE;
     // left child only removal
-    } else if (rootNode.left != 0) {
+    } else if (rootNode.left) {
       root = rootNode.left;
     
     // right child only removal
-    } else if (rootNode.right != 0) {
+    } else if (rootNode.right) {
       root = rootNode.right;
     
-    // leaf removal
+    // root only removal
     } else {
       ResetRoot();
     }
 
     occupancy--;
-    return 1;
+    return TRUE;
   }
 
   retval = rootNode.Remove(elementTNode,fio,occupancy,root);
@@ -345,11 +343,11 @@ void TNode<Whatever> :: SetHeightAndBalance (fstream * fio,
   righth = -1;
 
   // assign left and right, if they aren't null
-  if (left != 0) {
+  if (left) {
     TNode<Whatever> leftHeight(left,fio);
     lefth = leftHeight.height;
   }
-  if (right != 0) {
+  if (right) {
     TNode<Whatever> rightHeight(right,fio);
     righth = rightHeight.height;
   }
@@ -367,8 +365,10 @@ void TNode<Whatever> :: SetHeightAndBalance (fstream * fio,
   if (abs(balance) > THRESHOLD) {
     long fakeOccupancy = 42;
     TNode<Whatever> removable(data);
+    //cout << "Removing from SHAB " << (const char *)removable << "\n";
     Remove(*this,fio,fakeOccupancy,PositionInParent,TRUE);
     TNode<Whatever> temp(PositionInParent,fio);
+    //cout << "Reinserting " << (const char *)removable << "\n";
     temp.Insert(removable.data,fio,fakeOccupancy,PositionInParent);
   }
 }
@@ -462,17 +462,16 @@ void Tree <Whatever> :: ResetRoot () {
 template <class Whatever>
 unsigned long TNode<Whatever> :: Insert (Whatever & element, fstream * fio,
 	long & occupancy, offset & PositionInParent) {
-
   if (element == data) { // duplicate entry, switch to new data
     data = element;
     fio -> seekp(this_position);
     Write(fio);
-    return 1;
+    return TRUE;
 
   } else if (element > data) { // element larger, enter right
     fio -> seekp(0, ios :: end);
 
-    if (right != 0) { // recursive case
+    if (right) { // recursive case
       TNode<Whatever> rightNode(right,fio);
       rightNode.Insert(element, fio, occupancy,right);
     } else { // base case
@@ -482,7 +481,7 @@ unsigned long TNode<Whatever> :: Insert (Whatever & element, fstream * fio,
 
   } else { // element less than, enter left
     fio -> seekp(0, ios :: end);
-    if (left != 0) { // recursive case
+    if (left) { // recursive case
       TNode<Whatever> leftNode(left,fio);
       leftNode.Insert(element,fio,occupancy,left);
     } else { // base case
@@ -496,6 +495,7 @@ unsigned long TNode<Whatever> :: Insert (Whatever & element, fstream * fio,
   SetHeightAndBalance(fio,PositionInParent); // update height and balance
   fio -> seekp(this_position); // write updated node
   Write(fio);
+  return TRUE;
 }
 
 /*
@@ -514,36 +514,34 @@ Result: item is found or not found. It answers the question.
 template <class Whatever>
 unsigned long Tree<Whatever> :: Lookup (Whatever & element) const {
   IncrementOperation();
-    
   // empty tree check
   fio->seekg(0, ios::end);
   if (root == fio -> tellg()) {
-    return 0;
+    return FALSE;
   }
 
   TNode<Whatever> working(root,fio); // working TNode
   
   while (true) {
-
     // is dulpicate?
     if (element == working.data) {
       element = working.data;
-      return 1;
+      return TRUE;
       
     // move to right pointer if element is greater than current node
     } else if (element > working.data) {
-      if (working.right != 0) {
+      if (working.right) {
           working.Read(working.right,fio);
       } else {
-        return 0;
+        return FALSE;
       }
 
     // move to left pointer if element is less than current node
-    } else if (!(element > working.data)) {
-      if (working.left != 0) {
+    } else {
+      if (working.left) {
         working.Read(working.left,fio);
       } else {
-        return 0;
+        return FALSE;
       }
     } // end greaterthan/lessthan if
   } // end while
@@ -721,7 +719,7 @@ Result: debug messages will show
 */
 template <class Whatever>
 void Tree<Whatever> :: Set_Debug_On(void) {
-  debug_on = 1;
+  debug_on = TRUE;
 }
 
 /*
@@ -733,7 +731,7 @@ Result: debug messages will not show
 */
 template <class Whatever>
 void Tree<Whatever> :: Set_Debug_Off(void) {
-  debug_on = 0;
+  debug_on = FALSE;
 }
 
 /* I did not write this function */
@@ -800,3 +798,4 @@ Write_AllTNodes (ostream & stream, fstream * fio) const {
 
 	return stream;
 }
+

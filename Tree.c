@@ -1,12 +1,12 @@
 /*------------------------------------------------------------------------
-						        Stazia Tronboll
+						                                            Stazia Tronboll
                                                         cs12xpr
                                                         Kevin Koutney
                                                         cs12xdx
                                                         CSE 12, Winter 2015
                                                         9 March 2015
-			Assignment 9
-File: Tree.c
+			                          Assignment 9
+File: Driver.c
 FILE DECSRIPTION
 -------------------------------------------------------------------------*/
 
@@ -40,6 +40,7 @@ long Tree<Whatever>::operation = 0;
 
 #define THRESHOLD 2
 #define ROOT_PLACE 8
+#define MEANING_OF_LIFE_THE_UNIVERSE_AND_EVERYTHING 42
 
 template <class Whatever>
 ostream & operator << (ostream &, const TNode<Whatever> &);
@@ -137,6 +138,7 @@ template <class Whatever>
 void TNode<Whatever> :: ReplaceAndRemoveMax (TNode<Whatever> & targetTNode, 
 	fstream * fio, offset & PositionInParent) {
   // TNode<Whatever> thisNode(PositionInParent,fio);
+  //cout << (const char *)&data << " in RARM\n";
   //if there is a right child, recursively call ReplaceRemoveMax on it
   if(right)
   {
@@ -189,14 +191,15 @@ unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
       if (left && right) {
         TNode<Whatever> leftNode(left,fio);
         leftNode.ReplaceAndRemoveMax(*this,fio,left);
-        
-        // SHAB of updated root node
-        SetHeightAndBalance(fio,PositionInParent);
+        occupancy--;
 
-        // write the updated node
-        fio -> seekp(this_position);
-        Write(fio);
-      
+        if (!fromSHB) {
+          SetHeightAndBalance(fio,PositionInParent);
+        } else {
+          Write(fio);
+        }
+
+        return TRUE;
       // left child only removal
       } else if (left) {
         PositionInParent = left;
@@ -210,15 +213,17 @@ unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
         PositionInParent = NULL;
       }
 
-      occupancy--;
-      return TRUE;
+        occupancy--;
+        if(!fromSHB)
+          Write(fio);
+        return TRUE;
 
     // search when element greater than this
     } else if (elementTNode.data > data) {
       
       if (right) { // recursive case
         TNode<Whatever> rightNode(right,fio);
-        retVal = rightNode.Remove(elementTNode,fio,occupancy,right,0);
+        retVal = rightNode.Remove(elementTNode,fio,occupancy,right,fromSHB);
       } else {
         return FALSE;
       }
@@ -228,20 +233,19 @@ unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
 
       if (left) { // recursive case
         TNode<Whatever> leftNode(left,fio);
-        retVal = leftNode.Remove(elementTNode,fio,occupancy,left,0);
+        retVal = leftNode.Remove(elementTNode,fio,occupancy,left,fromSHB);
       } else {
         return FALSE;
       }
 
     } // end placement if-else
     
-    // update height and balance of each node visited
     if (!fromSHB) {
       SetHeightAndBalance(fio,PositionInParent);
+    } else {
+      Write(fio);
     }
 
-    fio -> seekp(this_position);
-    Write(fio);
     return retVal;
 }
 
@@ -261,19 +265,35 @@ Side effects: tree's static occupancy adjusted
 */
 template <class Whatever>
 unsigned long Tree<Whatever> :: Remove (Whatever & element) {
-
+  unsigned long retVal;
   // check for empty tree
-  fio->seekg(0, ios::end);
-  if (root == fio -> tellg()) {
+  //fio->seekg(0, ios::end);
+  //if (root == fio -> tellg()) {
+  if(!occupancy)
     return FALSE;
-  }
-
-  unsigned long retval; // value to return
+  //}
+ // value to return
   TNode<Whatever> elementTNode(element); // temp for TNode's remove
   TNode<Whatever> rootNode(root,fio); // temp for root check
   
   IncrementOperation();
 
+  if(occupancy > 1) {
+    retVal = rootNode.Remove(elementTNode, fio, occupancy, root);
+    element = elementTNode.data; 
+  } else {
+    element = rootNode.data; 
+    ResetRoot(); //decrement occupancy in reset rooooottt!!!!!!!!!!!!!!!?!
+    rootNode.Write(fio);
+  }
+ 
+
+
+  return retVal;
+}
+
+
+  /*
   // once the element is found, reassign pointers and delete, return TRUE
   if (rootNode.data == element) { // found node to remove
 
@@ -284,12 +304,9 @@ unsigned long Tree<Whatever> :: Remove (Whatever & element) {
       TNode<Whatever> leftNode(rootNode.left,fio);
       leftNode.ReplaceAndRemoveMax(rootNode,fio,rootNode.left);
       
-      // SHAB of updated root node
-      rootNode.SetHeightAndBalance(fio,root);
-
       // write the updated node
-      fio -> seekp(root);
-      rootNode.Write(fio);
+     // fio -> seekp(root);
+    //  rootNode.Write(fio);
     
     // left child only removal
     } else if (rootNode.left) {
@@ -300,19 +317,8 @@ unsigned long Tree<Whatever> :: Remove (Whatever & element) {
       root = rootNode.right;
     
     // root only removal
-    } else {
-      ResetRoot();
-    }
 
-    occupancy--;
-    return TRUE;
-  }
-
-  retval = rootNode.Remove(elementTNode,fio,occupancy,root);
-  element = elementTNode.data;
-
-  return retval;
-}
+    */
 
 /*
 Name: SetHeightAndBalance
@@ -336,6 +342,7 @@ Result:
 template <class Whatever>
 void TNode<Whatever> :: SetHeightAndBalance (fstream * fio,
 	offset & PositionInParent) {
+//cout << (const char *)&data << " in SHAB\n";
 
   long lefth, righth; // height of children
 
@@ -364,13 +371,13 @@ void TNode<Whatever> :: SetHeightAndBalance (fstream * fio,
 
   // fix if surpasses threshold
   if (abs(balance) > THRESHOLD) {
-    long fakeOccupancy = 42;
+    long fakeOccupancy = MEANING_OF_LIFE_THE_UNIVERSE_AND_EVERYTHING;
     TNode<Whatever> removable(data);
-    //cout << "Removing from SHAB " << (const char *)removable << "\n";
     Remove(*this,fio,fakeOccupancy,PositionInParent,TRUE);
     TNode<Whatever> temp(PositionInParent,fio);
-    //cout << "Reinserting " << (const char *)removable << "\n";
     temp.Insert(removable.data,fio,fakeOccupancy,PositionInParent);
+  } else {
+    Write(fio);
   }
 }
 
@@ -431,6 +438,7 @@ void Tree <Whatever> :: ResetRoot () {
     offset end_position = fio -> tellp();
     //((TNode<Whatever>)root).this_position = end_position;
     root = end_position;
+    occupancy--;
 
   //NEED TO FIGURE OUT PROPER SYNTAX!!!!!!!!! I Believe this is the 
   //gist of this function though
@@ -463,9 +471,9 @@ void Tree <Whatever> :: ResetRoot () {
 template <class Whatever>
 unsigned long TNode<Whatever> :: Insert (Whatever & element, fstream * fio,
 	long & occupancy, offset & PositionInParent) {
+  
   if (element == data) { // duplicate entry, switch to new data
     data = element;
-    fio -> seekp(this_position);
     Write(fio);
     return TRUE;
 
@@ -492,10 +500,7 @@ unsigned long TNode<Whatever> :: Insert (Whatever & element, fstream * fio,
 
   } // end placement if-else
 
-
   SetHeightAndBalance(fio,PositionInParent); // update height and balance
-  fio -> seekp(this_position); // write updated node
-  Write(fio);
   return TRUE;
 }
 
@@ -631,7 +636,7 @@ void TNode<Whatever> :: Write (fstream * fio) const {
   }
 
   Tree<Whatever> :: IncrementCost(); // cost increment
-
+  fio -> seekp(this_position);
   fio -> write((const char *) this, sizeof(TNode<Whatever>)); // write data
 }
 
@@ -706,8 +711,6 @@ Tree<Whatever> :: ~Tree (void)
   // save final root and occupancy to reflect changes made in this run
   fio -> write((const char *) &root, sizeof(root));
   fio -> write((const char *) &occupancy, sizeof(occupancy));
-  root = 0;
-  occupancy = 0;
   delete fio;
 }	/* end: ~Tree */
 

@@ -112,13 +112,13 @@ unsigned long Tree<Whatever> :: Insert (Whatever & element) {
 
   // insert root
   if (ending == root) {
-    TNode<Whatever> temp (element, fio, occupancy); // write ctor  
+    TNode<Whatever> temp (element, fio, occupancy); // to write root Node  
     root = temp.this_position;
     return TRUE;
 
   // launch search for every other entry
   } else {
-    TNode<Whatever> readRootNode (root, fio);
+    TNode<Whatever> readRootNode (root, fio); // to read root Node
     return readRootNode.Insert(element, fio, occupancy, root);
   } //end of if/else insert chain
 
@@ -147,7 +147,7 @@ void TNode<Whatever> :: ReplaceAndRemoveMax (TNode<Whatever> & targetTNode,
   //if there is a right child, recursively call ReplaceRemoveMax on it
   if(right)
   {
-    TNode<Whatever> RightNode (right, fio);
+    TNode<Whatever> RightNode (right, fio); // to read & RARM right Node
     RightNode.ReplaceAndRemoveMax(targetTNode, fio, right);
     SetHeightAndBalance(fio, PositionInParent);
   }
@@ -198,7 +198,7 @@ unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
 
     // two children removal
     if (left && right) {
-      TNode<Whatever> leftNode(left, fio);
+      TNode<Whatever> leftNode(left, fio); // to read left Node
       leftNode.ReplaceAndRemoveMax(*this, fio, left);
       occupancy--;
 
@@ -240,7 +240,7 @@ unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
     //recursive case: if a right node exists
     if (right) {
       // create right temporary node to call remove on, based on right position
-      TNode<Whatever> rightNode(right, fio);
+      TNode<Whatever> rightNode(right, fio); //to read right node
       //set retVal to the result of rightNode's remove
       retVal = rightNode.Remove(elementTNode, fio, occupancy, right, fromSHB);
     //base case: if there is no right node
@@ -255,7 +255,7 @@ unsigned long TNode<Whatever> :: Remove (TNode<Whatever> & elementTNode,
     //recursive case: if a left node exists
     if (left) {
       // create left temporary node to call remove on, based on left position
-      TNode<Whatever> leftNode(left, fio);
+      TNode<Whatever> leftNode(left, fio); //to read left node
       //set retVal to the result of leftNode's remove
       retVal = leftNode.Remove(elementTNode, fio, occupancy, left, fromSHB);
     //base case: if there is no right node
@@ -352,11 +352,11 @@ void TNode<Whatever> :: SetHeightAndBalance (fstream * fio,
 
   // assign left and/or right heights, depending on if they aren't null
   if (left) {
-    TNode<Whatever> leftHeight(left, fio);
+    TNode<Whatever> leftHeight(left, fio); // to read left node
     lefth = leftHeight.height;
   }
   if (right) {
-    TNode<Whatever> rightHeight(right, fio);
+    TNode<Whatever> rightHeight(right, fio); // to read right now
     righth = rightHeight.height;
   }
 
@@ -377,7 +377,7 @@ void TNode<Whatever> :: SetHeightAndBalance (fstream * fio,
     TNode<Whatever> removable(data);//copy tnode data to reinsert after remove
     //call remomove on this
     Remove(*this, fio, fakeOccupancy, PositionInParent, TRUE);
-    TNode<Whatever> temp(PositionInParent, fio); //temp to call insert
+    TNode<Whatever> temp(PositionInParent, fio); //read temp to call insert
     temp.Insert(removable.data, fio, fakeOccupancy, PositionInParent);
 
     // otherwise, Write fio
